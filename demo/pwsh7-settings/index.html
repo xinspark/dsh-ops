@@ -1,0 +1,1048 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>dsh-ops · PowerShell 联动设置（演示）</title>
+<style>
+  :root {
+    --bg: #fff;
+    --bg-layer: #fff;
+    --bg-sunken: #f5f6f7;
+    --fg: #0f1115;
+    --fg-2: #61666b;
+    --fg-3: #81858c;
+    --line-1: #0000000a;
+    --line-2: #0000001a;
+    --line-3: #0000001f;
+    --line-4: #00000029;
+    --accent: #4176e6;
+    --danger: #ec1313;
+    --success: #22c55e;
+    --warn: #f59e0b;
+    --hover: rgba(0, 0, 0, .045);
+    --track-off: #00000029;
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --font: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", "PingFang SC", sans-serif;
+    --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
+  [data-theme="dark"] {
+    --bg: #151517;
+    --bg-layer: #353638;
+    --bg-sunken: #232324;
+    --fg: #f9fafb;
+    --fg-2: #cfd3d6;
+    --fg-3: #adb2b8;
+    --line-1: #ffffff0f;
+    --line-2: #ffffff1f;
+    --line-3: #ffffff29;
+    --line-4: #fff3;
+    --accent: #7aaaff;
+    --danger: #ff6b6b;
+    --success: #22c55e;
+    --warn: #f59e0b;
+    --hover: rgba(255, 255, 255, .06);
+    --track-off: #ffffff29;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--fg); }
+  body {
+    font-family: var(--font);
+    font-size: 14px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    padding-bottom: 80px;
+  }
+  button { font-family: inherit; }
+
+  .demo-bar {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 16px;
+    background: var(--bg-sunken);
+    border-bottom: 1px solid var(--line-2);
+    color: var(--fg-3);
+    font-size: 12px;
+  }
+  .demo-tag {
+    padding: 1px 6px;
+    border: 1px solid var(--line-3);
+    border-radius: 4px;
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: .06em;
+    color: var(--fg-2);
+  }
+  .demo-bar .demo-grow { flex: 1; }
+  .demo-bar button {
+    appearance: none;
+    height: 26px;
+    padding: 0 10px;
+    border: 1px solid var(--line-3);
+    border-radius: 6px;
+    background: transparent;
+    color: var(--fg-2);
+    font-size: 12px;
+    cursor: pointer;
+  }
+  .demo-bar button:hover { background: var(--hover); }
+
+  .page {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 26px 24px 48px;
+  }
+  .crumbs {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--fg-3);
+    font-size: 12px;
+  }
+  .crumbs b { color: var(--fg-2); font-weight: 500; }
+
+  .identity {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-top: 18px;
+  }
+  .icon {
+    width: 42px;
+    height: 42px;
+    flex: none;
+    display: grid;
+    place-items: center;
+    border: 1px solid var(--line-3);
+    border-radius: 10px;
+    background:
+      linear-gradient(145deg, color-mix(in srgb, var(--accent) 18%, transparent), transparent 62%),
+      var(--bg-sunken);
+    color: var(--fg);
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: .04em;
+  }
+  .identity h1 {
+    margin: 0;
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    font-size: 18px;
+    font-weight: 600;
+    line-height: 1.3;
+  }
+  .identity .ver { color: var(--fg-3); font-size: 12px; font-weight: 400; font-family: var(--mono); }
+  .identity .sub { margin: 3px 0 0; color: var(--fg-3); font-size: 12px; }
+  .identity .state {
+    margin-left: auto;
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border: 1px solid var(--line-2);
+    border-radius: 999px;
+    color: var(--fg-2);
+    font-size: 12px;
+  }
+  .identity .state::before {
+    content: "";
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--success);
+  }
+
+  .meta {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px 28px;
+    margin: 22px 0 0;
+    padding: 16px 0;
+    border-top: 1px solid var(--line-2);
+    border-bottom: 1px solid var(--line-2);
+  }
+  .meta div { display: grid; gap: 2px; min-width: 0; }
+  .meta dt { color: var(--fg-3); font-size: 11px; }
+  .meta dd { margin: 0; font-size: 13px; overflow-wrap: anywhere; }
+
+  .section { margin-top: 32px; }
+  .section-head { display: flex; align-items: baseline; gap: 10px; min-width: 0; }
+  .section-head h2 { margin: 0; font-size: 14px; font-weight: 500; line-height: 20px; }
+  .section-head .hint { color: var(--fg-3); font-size: 12px; }
+  .section-head .hint b { color: var(--fg-2); font-weight: 500; }
+
+  .rows { margin-top: 8px; }
+  .row {
+    display: flex;
+    align-items: flex-start;
+    gap: 20px;
+    padding: 14px 0;
+    border-top: 1px solid var(--line-2);
+    min-width: 0;
+  }
+  .row:first-child { border-top: none; }
+  .row-text { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+  .row-title { color: var(--fg); font-size: 13px; font-weight: 500; line-height: 1.5; }
+  .row-hint { margin: 0; color: var(--fg-3); font-size: 12px; line-height: 1.5; }
+  .row-hint code {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--fg-2);
+  }
+  .row-side { flex: none; display: flex; align-items: center; gap: 10px; padding-top: 1px; }
+  .badge {
+    padding: 1px 7px;
+    border: 1px solid var(--line-3);
+    border-radius: 999px;
+    color: var(--fg-3);
+    font-size: 10px;
+    line-height: 16px;
+    white-space: nowrap;
+  }
+  .badge.warn { color: var(--warn); border-color: color-mix(in srgb, var(--warn) 40%, transparent); }
+  .badge.ok { color: var(--success); border-color: color-mix(in srgb, var(--success) 40%, transparent); }
+
+  .switch {
+    position: relative;
+    width: 34px;
+    height: 20px;
+    flex: none;
+    padding: 0;
+    border: none;
+    border-radius: 999px;
+    background: var(--track-off);
+    cursor: pointer;
+    transition: background .16s ease;
+  }
+  .switch::after {
+    content: "";
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, .35);
+    transition: transform .16s ease;
+  }
+  .switch[aria-checked="true"] { background: var(--accent); }
+  .switch[aria-checked="true"]::after { transform: translateX(14px); }
+  .switch:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+  .switch:disabled { opacity: .38; cursor: not-allowed; }
+
+  .tabs {
+    display: inline-flex;
+    gap: 2px;
+    margin-top: 12px;
+    padding: 3px;
+    border: 1px solid var(--line-2);
+    border-radius: 10px;
+    background: var(--bg-sunken);
+  }
+  .tabs button {
+    appearance: none;
+    height: 28px;
+    padding: 0 12px;
+    border: 1px solid transparent;
+    border-radius: 7px;
+    background: transparent;
+    color: var(--fg-3);
+    font-size: 12px;
+    cursor: pointer;
+  }
+  .tabs button[aria-selected="true"] {
+    background: var(--bg);
+    border-color: var(--line-2);
+    color: var(--fg);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, .08);
+  }
+  .tabs button:hover:not([aria-selected="true"]) { color: var(--fg-2); }
+
+  .effect {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    margin-top: 16px;
+    padding: 12px 14px;
+    border-radius: var(--radius-sm);
+    background: var(--bg-sunken);
+    color: var(--fg-2);
+    font-size: 12px;
+    min-width: 0;
+  }
+  .effect > span { flex: none; color: var(--fg-3); }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; min-width: 0; }
+  .chip {
+    padding: 1px 7px;
+    border: 1px solid var(--line-3);
+    border-radius: 6px;
+    background: var(--bg);
+    color: var(--fg-2);
+    font-family: var(--mono);
+    font-size: 11px;
+    line-height: 18px;
+  }
+  .chip.muted { opacity: .55; }
+
+  .actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 16px;
+  }
+  .btn {
+    appearance: none;
+    height: 32px;
+    padding: 0 14px;
+    border: 1px solid var(--line-3);
+    border-radius: var(--radius-sm);
+    background: transparent;
+    color: var(--fg);
+    font-size: 13px;
+    cursor: pointer;
+  }
+  .btn:hover:not(:disabled) { background: var(--hover); }
+  .btn:disabled { opacity: .4; cursor: not-allowed; }
+  .btn.primary {
+    border-color: transparent;
+    background: var(--fg);
+    color: var(--bg);
+  }
+  .btn.primary:hover:not(:disabled) { opacity: .88; background: var(--fg); }
+  .btn.ghost { border-color: transparent; color: var(--fg-2); padding: 0 8px; }
+  .btn.ghost:hover:not(:disabled) { color: var(--fg); }
+  .actions .status { color: var(--fg-3); font-size: 12px; }
+  .actions .status.error { color: var(--danger); }
+  .actions .status.ok { color: var(--success); }
+
+  .linked-card {
+    margin-top: 10px;
+    padding: 14px;
+    border: 1px solid var(--line-3);
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-width: 0;
+  }
+  .linked-head { display: flex; align-items: center; gap: 10px; min-width: 0; }
+  .linked-title { color: var(--fg); font-size: 13px; font-weight: 600; }
+  .linked-head .badge { margin-left: auto; }
+  .linked-note { margin: 0; color: var(--fg-3); font-size: 12px; line-height: 1.6; }
+  .facts {
+    display: grid;
+    gap: 6px;
+    margin: 0;
+    padding: 12px;
+    border-radius: var(--radius-sm);
+    background: var(--bg-sunken);
+    font-size: 12px;
+  }
+  .facts > div { display: grid; grid-template-columns: 76px minmax(0, 1fr); gap: 10px; }
+  .facts dt { color: var(--fg-3); }
+  .facts dd { margin: 0; overflow-wrap: anywhere; }
+  .facts code { font-family: var(--mono); font-size: 11px; }
+
+  .callout {
+    display: flex;
+    gap: 8px;
+    margin: 0;
+    padding: 10px 12px;
+    border: 1px solid var(--line-2);
+    border-radius: var(--radius-sm);
+    color: var(--fg-2);
+    font-size: 12px;
+    line-height: 1.6;
+  }
+  .callout::before {
+    content: "";
+    flex: none;
+    width: 2px;
+    border-radius: 2px;
+    background: var(--warn);
+  }
+  .callout.ok::before { background: var(--success); }
+
+  .preview {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 12px;
+    border: 1px dashed var(--line-4);
+    border-radius: var(--radius-sm);
+  }
+  .preview-head { display: flex; align-items: baseline; gap: 8px; }
+  .preview-head strong { font-size: 13px; }
+  .preview-head span { color: var(--fg-3); font-size: 12px; }
+  .preview dl { display: grid; gap: 5px; margin: 0; font-size: 12px; }
+  .preview dl > div { display: grid; grid-template-columns: 64px minmax(0, 1fr); gap: 10px; }
+  .preview dt { color: var(--fg-3); }
+  .preview dd { margin: 0; overflow-wrap: anywhere; }
+  .preview code {
+    padding: 8px 10px;
+    border: 1px solid var(--line-2);
+    border-radius: 6px;
+    background: var(--bg-sunken);
+    font-family: var(--mono);
+    font-size: 11px;
+    line-height: 1.6;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+  .steps { display: flex; flex-direction: column; gap: 6px; margin: 0; padding: 0; list-style: none; font-size: 12px; }
+  .steps li { display: flex; align-items: center; gap: 8px; color: var(--fg-3); }
+  .steps li::before {
+    content: "";
+    width: 6px;
+    height: 6px;
+    flex: none;
+    border-radius: 50%;
+    background: var(--line-4);
+  }
+  .steps li.done { color: var(--fg-2); }
+  .steps li.done::before { background: var(--success); }
+  .steps li.now { color: var(--fg); }
+  .steps li.now::before { background: var(--accent); animation: pulse 1s ease infinite; }
+  @keyframes pulse { 50% { opacity: .35; } }
+
+  .foot {
+    margin-top: 36px;
+    padding-top: 14px;
+    border-top: 1px solid var(--line-2);
+    color: var(--fg-3);
+    font-size: 12px;
+    line-height: 1.7;
+  }
+  .foot code { font-family: var(--mono); font-size: 11px; }
+
+  @media (max-width: 560px) {
+    .page { padding: 20px 16px 40px; }
+    .meta { grid-template-columns: 1fr; }
+    .row { gap: 12px; }
+  }
+</style>
+</head>
+<body>
+<div class="demo-bar">
+  <span class="demo-tag">DEMO</span>
+  <span>界面演示 · 不读写真实 profile</span>
+  <span class="demo-grow"></span>
+  <button id="theme-btn" type="button">切换浅色</button>
+  <button id="reset-btn" type="button">重置演示</button>
+</div>
+
+<main class="page">
+  <nav class="crumbs">插件 <span>/</span> <b>dsh-ops</b> <span>/</span> 配置</nav>
+
+  <header class="identity">
+    <div class="icon">OPS</div>
+    <div>
+      <h1>dsh-ops <span class="ver">0.5.0</span></h1>
+      <p class="sub">原生文件工具、PTC 与 Windows shell 集成</p>
+    </div>
+    <span class="state">运行中</span>
+  </header>
+
+  <dl class="meta">
+    <div><dt>来源</dt><dd>GitHub · T-Auto/dsh-ops</dd></div>
+    <div><dt>组件</dt><dd>4 个模式行 · discovery · integration</dd></div>
+    <div><dt>配置写入</dt><dd>configForms · 宿主 profile</dd></div>
+    <div><dt>当前模式</dt><dd id="meta-mode">Standard</dd></div>
+  </dl>
+
+  <section class="section" aria-labelledby="global-title">
+    <div class="section-head">
+      <h2 id="global-title">全局开关</h2>
+      <span class="hint">一级总开关 · 作用于所有模式</span>
+    </div>
+    <div class="rows">
+      <div class="row" data-global="hideOfficialTools">
+        <div class="row-text">
+          <div class="row-title">隐藏原版工具</div>
+          <p class="row-hint">总开关。关闭后，各模式的「隐藏原版工具」立即失效；已保存的选择保留，不重置。</p>
+        </div>
+        <div class="row-side">
+          <span class="badge" data-global-badge hidden>已关闭</span>
+          <button class="switch" type="button" role="switch" aria-checked="true" aria-label="隐藏原版工具总开关"></button>
+        </div>
+      </div>
+      <div class="row" data-global="dynamicTools">
+        <div class="row-text">
+          <div class="row-title">动态工具加载</div>
+          <p class="row-hint">总开关。关闭后，各模式的「启用动态工具加载」立即失效；已保存的选择保留。</p>
+        </div>
+        <div class="row-side">
+          <span class="badge" data-global-badge hidden>已关闭</span>
+          <button class="switch" type="button" role="switch" aria-checked="true" aria-label="动态工具加载总开关"></button>
+        </div>
+      </div>
+    </div>
+    <p class="row-hint" id="global-note" style="margin-top:10px;display:none"></p>
+  </section>
+
+  <section class="section" aria-labelledby="mode-title">
+    <div class="section-head">
+      <h2 id="mode-title">模式设置</h2>
+      <span class="hint">二级 · 每个模式各自保存</span>
+    </div>
+
+    <div class="tabs" role="tablist" aria-label="模式">
+      <button type="button" role="tab" data-mode="standard" aria-selected="true">Standard</button>
+      <button type="button" role="tab" data-mode="minimal" aria-selected="false">Minimal</button>
+      <button type="button" role="tab" data-mode="ptc" aria-selected="false">PTC</button>
+      <button type="button" role="tab" data-mode="cordis" aria-selected="false">Cordis</button>
+    </div>
+
+    <div class="rows" id="option-rows">
+      <div class="row" data-option="publishBashTool">
+        <div class="row-text">
+          <div class="row-title">开启 bash 工具</div>
+          <p class="row-hint">向已授权会话发布 <code>ops_bash</code>。关闭后只保留文件工具。</p>
+        </div>
+        <div class="row-side">
+          <button class="switch" type="button" role="switch" aria-checked="true" aria-label="开启 bash 工具"></button>
+        </div>
+      </div>
+
+      <div class="row" data-option="hidePwsh">
+        <div class="row-text">
+          <div class="row-title">隐藏 pwsh</div>
+          <p class="row-hint" id="hide-pwsh-hint">隐藏宿主自带的 pwsh。关闭后 Windows PowerShell 5.1 会直接暴露给模型。</p>
+        </div>
+        <div class="row-side">
+          <button class="switch" type="button" role="switch" aria-checked="true" aria-label="隐藏 pwsh"></button>
+        </div>
+      </div>
+
+      <div class="row" data-option="hideOfficialTools">
+        <div class="row-text">
+          <div class="row-title">隐藏原版工具</div>
+          <p class="row-hint" id="hide-official-hint">OPS 接管 <code>read</code> / <code>glob</code> / <code>grep</code> 时，隐藏对应的官方工具。</p>
+        </div>
+        <div class="row-side">
+          <span class="badge" data-option-badge hidden>受总开关停用</span>
+          <button class="switch" type="button" role="switch" aria-checked="true" aria-label="隐藏原版工具"></button>
+        </div>
+      </div>
+
+      <div class="row" data-option="discoveryEnabled">
+        <div class="row-text">
+          <div class="row-title">启用动态工具加载</div>
+          <p class="row-hint" id="discovery-hint">按需发现并加载 OPS 能力；关闭后只保留始终加载项。</p>
+        </div>
+        <div class="row-side">
+          <span class="badge" data-option-badge hidden>受总开关停用</span>
+          <button class="switch" type="button" role="switch" aria-checked="true" aria-label="启用动态工具加载"></button>
+        </div>
+      </div>
+    </div>
+
+    <div class="effect">
+      <span>模型将看到</span>
+      <div class="chips" id="effect-chips"></div>
+    </div>
+
+    <div class="actions">
+      <button class="btn primary" type="button" id="save-btn" disabled>保存</button>
+      <button class="btn ghost" type="button" id="revert-btn" disabled>恢复已保存值</button>
+      <span class="status" id="save-status" role="status"></span>
+    </div>
+  </section>
+
+  <section class="section" aria-labelledby="linked-title">
+    <div class="section-head">
+      <h2 id="linked-title">PowerShell 联动</h2>
+      <span class="hint">dsh-win-pwsh7 · 由联动插件提供 pwsh7</span>
+    </div>
+    <div class="linked-card" id="linked-card"></div>
+  </section>
+
+  <footer class="foot">
+    演示数据保存在页面内存里。接入时四项分别写入模式行配置
+    <code>publishBashTool</code>、<code>hidePwsh</code>、<code>hideOfficialTools</code>、<code>discoveryEnabled</code>；
+    两个总开关由一级详情页持有。
+  </footer>
+</main>
+
+<script>
+(() => {
+  'use strict'
+
+  const MODE_LABEL = { standard: 'Standard', minimal: 'Minimal', ptc: 'PTC', cordis: 'Cordis' }
+  const OPTION_KEYS = ['publishBashTool', 'hidePwsh', 'hideOfficialTools', 'discoveryEnabled']
+  const DEFAULT_MODE = () => ({
+    publishBashTool: true,
+    hidePwsh: true,
+    hideOfficialTools: true,
+    discoveryEnabled: true,
+  })
+
+  const defaults = () => ({
+    masters: { hideOfficialTools: true, dynamicTools: true },
+    modes: { standard: DEFAULT_MODE(), minimal: DEFAULT_MODE(), ptc: DEFAULT_MODE(), cordis: DEFAULT_MODE() },
+    linked: { state: 'missing' },
+  })
+
+  const initial = defaults()
+  let saved = structuredClone(initial)
+  let draft = structuredClone(initial)
+  let active = 'standard'
+  let dirty = false
+  let savedAt = null
+  let install = { phase: 'idle', step: 0 }
+  let installTimer = null
+  let note = ''
+
+  const $ = (sel, root = document) => root.querySelector(sel)
+  const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel))
+
+  const mode = () => draft.modes[active]
+  const linked = () => draft.linked
+  const linkedInstalled = () => linked().state === 'installed'
+  const master = (key) => draft.masters[key]
+
+  const masterFor = { hideOfficialTools: 'hideOfficialTools', discoveryEnabled: 'dynamicTools' }
+  const optionEffective = (key) => {
+    const gate = masterFor[key]
+    return gate === undefined ? true : master(gate)
+  }
+
+  function pwshSurface() {
+    const hide = mode().hidePwsh
+    const installed = linkedInstalled()
+    if (hide && installed) return { label: 'pwsh7', tone: 'ok', why: '隐藏官方 pwsh，由联动插件新增 pwsh7' }
+    if (hide && !installed) return { label: '无 pwsh', tone: 'muted', why: '官方 pwsh 被隐藏，且未安装联动插件' }
+    if (!hide && installed) return { label: 'pwsh → pwsh7', tone: 'ok', why: '保留官方 pwsh 入口，执行器覆盖为 pwsh7' }
+    return { label: 'pwsh 5.1', tone: 'warn', why: '官方 Windows PowerShell 5.1 会暴露给模型' }
+  }
+
+  function effectChips() {
+    const chips = []
+    const push = (label, muted = false) => chips.push({ label, muted })
+    if (mode().publishBashTool) push('ops_bash')
+    const surface = pwshSurface()
+    push(surface.label, surface.tone === 'muted')
+    const hideOfficial = mode().hideOfficialTools && master('hideOfficialTools')
+    push(hideOfficial ? 'read/glob/grep → OPS' : 'read/glob/grep 官方', !hideOfficial)
+    const discovery = mode().discoveryEnabled && master('dynamicTools')
+    push(discovery ? '动态发现' : '仅常驻', !discovery)
+    return chips
+  }
+
+  function renderChips() {
+    const root = $('#effect-chips')
+    root.replaceChildren(...effectChips().map(({ label, muted }) => {
+      const span = document.createElement('span')
+      span.className = 'chip' + (muted ? ' muted' : '')
+      span.textContent = label
+      return span
+    }))
+  }
+
+  function renderSwitch(button, checked, disabled) {
+    button.setAttribute('aria-checked', String(checked))
+    button.disabled = disabled
+  }
+
+  function renderGlobal() {
+    $$('[data-global]').forEach((row) => {
+      const key = row.dataset.global
+      renderSwitch($('.switch', row), master(key), false)
+      const badge = $('[data-global-badge]', row)
+      badge.hidden = master(key)
+      badge.className = 'badge warn'
+      badge.textContent = '已关闭'
+    })
+    const off = Object.entries(draft.masters).filter(([, on]) => !on).length
+    const noteEl = $('#global-note')
+    if (off === 0) {
+      noteEl.style.display = 'none'
+    } else {
+      noteEl.style.display = 'block'
+      noteEl.textContent = `${off} 个总开关关闭：对应子项显示「受总开关停用」，已保存的选择不会被改动。`
+    }
+  }
+
+  function renderOptions() {
+    const value = mode()
+    $$('[data-option]').forEach((row) => {
+      const key = row.dataset.option
+      const effective = optionEffective(key)
+      renderSwitch($('.switch', row), value[key], !effective)
+      const badge = $('[data-option-badge]', row)
+      if (badge) {
+        badge.hidden = effective
+        badge.className = 'badge warn'
+        badge.textContent = '受总开关停用'
+      }
+      row.style.opacity = effective ? '1' : '.72'
+    })
+
+    const installed = linkedInstalled()
+    const hideHint = $('#hide-pwsh-hint')
+    if (!installed) {
+      hideHint.textContent = '隐藏宿主自带的 pwsh。关闭后 Windows PowerShell 5.1 会直接暴露给模型。'
+    } else if (value.hidePwsh) {
+      hideHint.textContent = '隐藏官方 pwsh，由 dsh-win-pwsh7 提供 pwsh7。'
+    } else {
+      hideHint.textContent = '保留官方 pwsh 入口，执行器切换为 pwsh7（覆盖，不新增第二个入口）。'
+    }
+
+    $('#hide-official-hint').textContent = master('hideOfficialTools')
+      ? 'OPS 接管 read / glob / grep 时，隐藏对应的官方工具。'
+      : 'OPS 接管 read / glob / grep 时，隐藏对应的官方工具。当前受一级总开关停用。'
+    $('#discovery-hint').textContent = master('dynamicTools')
+      ? '按需发现并加载 OPS 能力；关闭后只保留始终加载项。'
+      : '按需发现并加载 OPS 能力；关闭后只保留始终加载项。当前受一级总开关停用。'
+
+    $('#meta-mode').textContent = MODE_LABEL[active]
+    $$('[data-mode]').forEach((tab) => tab.setAttribute('aria-selected', String(tab.dataset.mode === active)))
+  }
+
+  function renderSave() {
+    $('#save-btn').disabled = !dirty
+    $('#revert-btn').disabled = !dirty
+    const status = $('#save-status')
+    if (note) {
+      status.textContent = note
+      status.className = 'status ok'
+    } else if (dirty) {
+      status.textContent = '有未保存的更改'
+      status.className = 'status'
+    } else if (savedAt) {
+      status.textContent = `已保存 · ${savedAt}`
+      status.className = 'status ok'
+    } else {
+      status.textContent = ''
+      status.className = 'status'
+    }
+  }
+
+  function factRow(dt, dd) {
+    const div = document.createElement('div')
+    const t = document.createElement('dt')
+    t.textContent = dt
+    const d = document.createElement('dd')
+    if (dd instanceof Node) d.append(dd)
+    else d.textContent = dd
+    div.append(t, d)
+    return div
+  }
+
+  function codeNode(text) {
+    const code = document.createElement('code')
+    code.textContent = text
+    return code
+  }
+
+  function button(label, className, onClick) {
+    const b = document.createElement('button')
+    b.type = 'button'
+    b.className = className
+    b.textContent = label
+    b.addEventListener('click', onClick)
+    return b
+  }
+
+  function renderMissing(card) {
+    card.replaceChildren()
+    const head = document.createElement('div')
+    head.className = 'linked-head'
+    const title = document.createElement('strong')
+    title.className = 'linked-title'
+    title.textContent = '未检测到 dsh-win-pwsh7'
+    const badge = document.createElement('span')
+    badge.className = 'badge'
+    badge.textContent = '未安装'
+    head.append(title, badge)
+    card.append(head)
+
+    const hint = document.createElement('p')
+    hint.className = 'linked-note'
+    hint.textContent = '安装后：隐藏 pwsh 开启时由联动插件新增 pwsh7；关闭时保留官方 pwsh 入口，只把执行器覆盖为 pwsh7。'
+    card.append(hint)
+
+    const actions = document.createElement('div')
+    actions.className = 'actions'
+    actions.append(button('安装 dsh-win-pwsh7', 'btn primary', () => {
+      install = { phase: 'preview', step: 0 }
+      note = ''
+      render()
+    }))
+    card.append(actions)
+  }
+
+  function renderPreview(card) {
+    card.replaceChildren()
+    const head = document.createElement('div')
+    head.className = 'preview-head'
+    const strong = document.createElement('strong')
+    strong.textContent = '安装预览'
+    const span = document.createElement('span')
+    span.textContent = '确认后写入当前 profile'
+    head.append(strong, span)
+
+    const dl = document.createElement('dl')
+    dl.append(
+      factRow('profile', 'desktop'),
+      factRow('包', 'dsh-win-pwsh7'),
+      factRow('版本', '0.2.3'),
+    )
+    const cmd = document.createElement('code')
+    cmd.textContent = 'dsh plugin add dsh-win-pwsh7'
+    dl.append(factRow('命令', cmd))
+
+    const callout = document.createElement('p')
+    callout.className = 'callout'
+    callout.textContent = '安装会改动插件的组件列表；完成后需要重启 DSH 才会加载 pwsh7。'
+
+    const actions = document.createElement('div')
+    actions.className = 'actions'
+    actions.append(
+      button('执行安装', 'btn primary', () => {
+        install = { phase: 'running', step: 0 }
+        startInstall()
+      }),
+      button('取消', 'btn ghost', () => { install = { phase: 'idle', step: 0 }; render() }),
+    )
+
+    const panel = document.createElement('div')
+    panel.className = 'preview'
+    panel.append(head, dl, callout, actions)
+    card.append(panel)
+  }
+
+  const STEPS = ['解析包与版本', '写入 profile 插件列表', '重载插件清单', '校验 pwsh7 路径']
+  function renderRunning(card) {
+    card.replaceChildren()
+    const head = document.createElement('div')
+    head.className = 'linked-head'
+    const strong = document.createElement('strong')
+    strong.className = 'linked-title'
+    strong.textContent = '正在安装 dsh-win-pwsh7'
+    head.append(strong)
+    card.append(head)
+
+    const list = document.createElement('ul')
+    list.className = 'steps'
+    STEPS.forEach((label, index) => {
+      const li = document.createElement('li')
+      li.textContent = label
+      if (index < install.step) li.className = 'done'
+      else if (index === install.step) li.className = 'now'
+      list.append(li)
+    })
+    card.append(list)
+  }
+
+  function renderInstalled(card) {
+    card.replaceChildren()
+    const head = document.createElement('div')
+    head.className = 'linked-head'
+    const strong = document.createElement('strong')
+    strong.className = 'linked-title'
+    strong.textContent = 'dsh-win-pwsh7'
+    const badge = document.createElement('span')
+    badge.className = 'badge ok'
+    badge.textContent = '已安装'
+    head.append(strong, badge)
+    card.append(head)
+
+    const facts = document.createElement('dl')
+    facts.className = 'facts'
+    facts.append(
+      factRow('版本', '0.2.3'),
+      factRow('PowerShell', codeNode('7.6.9')),
+      factRow('路径', codeNode('C:\\Program Files\\PowerShell\\7\\pwsh.exe')),
+      factRow('状态', '已启用 · 执行器可用'),
+    )
+    card.append(facts)
+
+    const surface = pwshSurface()
+    const callout = document.createElement('p')
+    callout.className = 'callout' + (surface.tone === 'ok' ? ' ok' : '')
+    callout.textContent = `${mode().hidePwsh ? '隐藏 pwsh 已开启' : '隐藏 pwsh 已关闭'}：${surface.why}。`
+    card.append(callout)
+
+    if (install.phase === 'done') {
+      const done = document.createElement('p')
+      done.className = 'callout ok'
+      done.textContent = '安装完成。需要重启 DSH 才能加载 pwsh7。'
+      card.append(done)
+    }
+
+    const actions = document.createElement('div')
+    actions.className = 'actions'
+    actions.append(
+      button('重新检测', 'btn', () => {
+        note = '已是最新版本（0.2.3）'
+        renderSave()
+        setTimeout(() => { note = ''; renderSave() }, 2400)
+      }),
+      button('查看安装日志', 'btn ghost', () => {
+        note = '演示模式：日志面板未接入'
+        renderSave()
+        setTimeout(() => { note = ''; renderSave() }, 2400)
+      }),
+    )
+    card.append(actions)
+  }
+
+  function renderLinked() {
+    const card = $('#linked-card')
+    if (linkedInstalled()) renderInstalled(card)
+    else if (install.phase === 'preview') renderPreview(card)
+    else if (install.phase === 'running') renderRunning(card)
+    else renderMissing(card)
+  }
+
+  function render() {
+    renderGlobal()
+    renderOptions()
+    renderChips()
+    renderLinked()
+    renderSave()
+  }
+
+  function startInstall() {
+    clearInterval(installTimer)
+    render()
+    installTimer = setInterval(() => {
+      install.step += 1
+      if (install.step >= STEPS.length) {
+        clearInterval(installTimer)
+        installTimer = null
+        draft.linked = {
+          state: 'installed',
+          version: '0.2.3',
+          pwshVersion: '7.6.9',
+          path: 'C:\\Program Files\\PowerShell\\7\\pwsh.exe',
+        }
+        saved.linked = structuredClone(draft.linked)
+        install = { phase: 'done', step: STEPS.length }
+      }
+      render()
+    }, 420)
+  }
+
+  function setOption(key, checked) {
+    mode()[key] = checked
+    dirty = true
+    note = ''
+    savedAt = null
+    render()
+  }
+
+  // --- events ---
+  $$('[data-global]').forEach((row) => {
+    $('.switch', row).addEventListener('click', () => {
+      draft.masters[row.dataset.global] = !draft.masters[row.dataset.global]
+      dirty = true
+      note = ''
+      savedAt = null
+      render()
+    })
+  })
+
+  $$('[data-option]').forEach((row) => {
+    $('.switch', row).addEventListener('click', () => {
+      if (!optionEffective(row.dataset.option)) return
+      setOption(row.dataset.option, !mode()[row.dataset.option])
+    })
+  })
+
+  $$('[data-mode]').forEach((tab) => {
+    tab.addEventListener('click', () => {
+      active = tab.dataset.mode
+      note = ''
+      render()
+    })
+  })
+
+  $('#save-btn').addEventListener('click', () => {
+    saved = structuredClone(draft)
+    dirty = false
+    savedAt = new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
+    note = ''
+    render()
+  })
+
+  $('#revert-btn').addEventListener('click', () => {
+    draft = structuredClone(saved)
+    dirty = false
+    note = ''
+    savedAt = null
+    render()
+  })
+
+  $('#theme-btn').addEventListener('click', () => {
+    const dark = document.documentElement.dataset.theme !== 'light'
+    document.documentElement.dataset.theme = dark ? 'light' : 'dark'
+    $('#theme-btn').textContent = dark ? '切换深色' : '切换浅色'
+  })
+
+  $('#reset-btn').addEventListener('click', () => {
+    clearInterval(installTimer)
+    installTimer = null
+    const fresh = defaults()
+    saved = structuredClone(fresh)
+    draft = structuredClone(fresh)
+    active = 'standard'
+    dirty = false
+    savedAt = null
+    install = { phase: 'idle', step: 0 }
+    note = ''
+    render()
+  })
+
+  // Deterministic review states: index.html?state=override|added|gated|preview|light
+  function linkPlugin() {
+    draft.linked = {
+      state: 'installed',
+      version: '0.2.3',
+      pwshVersion: '7.6.9',
+      path: 'C:\\Program Files\\PowerShell\\7\\pwsh.exe',
+    }
+  }
+
+  function applyPreset(name) {
+    if (!name) return
+    if (name === 'light') {
+      document.documentElement.dataset.theme = 'light'
+      $('#theme-btn').textContent = '切换深色'
+      return
+    }
+    if (name === 'preview') {
+      install = { phase: 'preview', step: 0 }
+      return
+    }
+    if (name === 'gated') {
+      draft.masters.hideOfficialTools = false
+    } else if (name === 'added') {
+      linkPlugin()
+    } else if (name === 'override') {
+      linkPlugin()
+      draft.modes.standard.hidePwsh = false
+    }
+    saved = structuredClone(draft)
+  }
+
+  applyPreset(new URLSearchParams(location.search).get('state'))
+  render()
+})()
+</script>
+</body>
+</html>
