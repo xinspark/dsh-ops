@@ -1,0 +1,133 @@
+/** One catalogue for owned tools. This module never registers tools or imports host values. */
+import { PARAMETERS as fileParameters } from './file.js';
+import { PARAMETERS as ptcParameters } from './ptc.js';
+export { SDK_CAPABILITIES, SDK_OUTPUT } from './sdk.js';
+import type { Component } from './types.js';
+export type FileToolName = keyof typeof fileParameters;
+export type PtcToolName = keyof typeof ptcParameters;
+export declare const FILE_CAPABILITIES: readonly Readonly<{
+    rawName: "replace" | "read_pdf" | "read_docx" | "read_table" | "inspect_local_file" | "glob" | "grep" | "write_file" | "edit_file" | "diff" | "stat" | "copy" | "move" | "remove" | "read_files";
+    component: "file";
+    presentations: readonly ["native", "ptc", "both"];
+    availability: "resident" | "discoverable";
+    mutates: boolean;
+    concurrencySafe: boolean;
+    ptcAvailability: "resident" | "discoverable";
+    supportsContinuation: boolean;
+    observesRead: boolean;
+    parameters: import("./types.js").ParameterSchema;
+    description: string;
+    output: import("@deepseek-ai/dsh-tools").JsonSchemaNode;
+}>[];
+export declare const PTC_CAPABILITIES: readonly Readonly<{
+    availability: "resident";
+    mutates: true;
+    concurrencySafe: false;
+    ptcAvailability: "resident" | "discoverable";
+    supportsContinuation: boolean;
+    parameters: import("./types.js").ParameterSchema;
+    description: string;
+    output: import("@deepseek-ai/dsh-tools").JsonSchemaNode;
+    nativeProjection?: {
+        component: "file";
+        availability: "discoverable";
+        parameters: import("./types.js").ParameterSchema;
+        description: string;
+    } | undefined;
+    rawName: "result" | "batch";
+    component: "ptc";
+    presentations: readonly ["ptc"] | readonly ["native", "ptc", "both"];
+}>[];
+export declare const SHELL_CAPABILITIES: readonly Readonly<{
+    readonly rawName: "bash";
+    readonly component: "shell";
+    readonly presentations: readonly ["native", "ptc", "both"];
+    readonly availability: "resident";
+    readonly mutates: true;
+    readonly concurrencySafe: false;
+}>[];
+export declare const DISCOVERY_CAPABILITIES: readonly Readonly<{
+    readonly rawName: "discover_tools";
+    readonly component: "discovery";
+    readonly presentations: readonly ["native", "both"];
+    readonly availability: "resident";
+    readonly mutates: false;
+    readonly concurrencySafe: false;
+    readonly parameters: import("./types.js").ParameterSchema;
+    readonly description: "Select allowed OPS capabilities for the next model step in this scope; no file action.";
+    readonly output: import("@deepseek-ai/dsh-tools").JsonSchemaNode;
+}>[];
+export declare const CAPABILITIES: readonly (Readonly<{
+    readonly rawName: "load_sdk";
+    readonly component: "ptc";
+    readonly presentations: readonly ["ptc"];
+    readonly availability: "resident";
+    readonly ptcAvailability: "resident";
+    readonly mutates: false;
+    readonly concurrencySafe: false;
+    readonly parameters: import("./types.js").ParameterSchema;
+    readonly output: import("@deepseek-ai/dsh-tools").JsonSchemaNode;
+    readonly description: "Load 1-5 named OPS APIs into this agent’s typed SDK on the next model step. The current run_code snapshot cannot call newly requested APIs. No file operation runs here. Native/both presentations do not expose this loader.";
+}> | Readonly<{
+    rawName: "replace" | "read_pdf" | "read_docx" | "read_table" | "inspect_local_file" | "glob" | "grep" | "write_file" | "edit_file" | "diff" | "stat" | "copy" | "move" | "remove" | "read_files";
+    component: "file";
+    presentations: readonly ["native", "ptc", "both"];
+    availability: "resident" | "discoverable";
+    mutates: boolean;
+    concurrencySafe: boolean;
+    ptcAvailability: "resident" | "discoverable";
+    supportsContinuation: boolean;
+    observesRead: boolean;
+    parameters: import("./types.js").ParameterSchema;
+    description: string;
+    output: import("@deepseek-ai/dsh-tools").JsonSchemaNode;
+}> | Readonly<{
+    availability: "resident";
+    mutates: true;
+    concurrencySafe: false;
+    ptcAvailability: "resident" | "discoverable";
+    supportsContinuation: boolean;
+    parameters: import("./types.js").ParameterSchema;
+    description: string;
+    output: import("@deepseek-ai/dsh-tools").JsonSchemaNode;
+    nativeProjection?: {
+        component: "file";
+        availability: "discoverable";
+        parameters: import("./types.js").ParameterSchema;
+        description: string;
+    } | undefined;
+    rawName: "result" | "batch";
+    component: "ptc";
+    presentations: readonly ["ptc"] | readonly ["native", "ptc", "both"];
+}> | Readonly<{
+    readonly rawName: "bash";
+    readonly component: "shell";
+    readonly presentations: readonly ["native", "ptc", "both"];
+    readonly availability: "resident";
+    readonly mutates: true;
+    readonly concurrencySafe: false;
+}> | Readonly<{
+    readonly rawName: "discover_tools";
+    readonly component: "discovery";
+    readonly presentations: readonly ["native", "both"];
+    readonly availability: "resident";
+    readonly mutates: false;
+    readonly concurrencySafe: false;
+    readonly parameters: import("./types.js").ParameterSchema;
+    readonly description: "Select allowed OPS capabilities for the next model step in this scope; no file action.";
+    readonly output: import("@deepseek-ai/dsh-tools").JsonSchemaNode;
+}>)[];
+export type Capability = typeof CAPABILITIES[number];
+export type ToolName = Capability['rawName'];
+export declare function capability(rawName: string): Capability | undefined;
+export declare function capabilitiesFor(component: Component): readonly Capability[];
+export declare const FILE_TOOLS: readonly ("replace" | "read_pdf" | "read_docx" | "read_table" | "inspect_local_file" | "glob" | "grep" | "write_file" | "edit_file" | "diff" | "stat" | "copy" | "move" | "remove" | "read_files")[];
+export declare const NATIVE_FILE_TOOLS: readonly ("replace" | "read_pdf" | "read_docx" | "read_table" | "inspect_local_file" | "result" | "glob" | "grep" | "write_file" | "edit_file" | "diff" | "stat" | "copy" | "move" | "remove" | "read_files" | "batch")[];
+export declare const NATIVE_RESIDENT_FILE_TOOLS: readonly ("replace" | "read_pdf" | "read_docx" | "read_table" | "inspect_local_file" | "glob" | "grep" | "write_file" | "edit_file" | "diff" | "stat" | "copy" | "move" | "remove" | "read_files")[];
+export declare const FILE_MUTATIONS: readonly ("replace" | "read_pdf" | "read_docx" | "read_table" | "inspect_local_file" | "glob" | "grep" | "write_file" | "edit_file" | "diff" | "stat" | "copy" | "move" | "remove" | "read_files")[];
+export declare const PTC_TOOLS: ("result" | "batch")[];
+export declare const IN_PROCESS_TOOLS: readonly "bash"[];
+export declare const DISCOVERY_TOOL_NAME: "discover_tools";
+export declare const CONTINUATION_TOOLS: readonly ("replace" | "read_pdf" | "read_docx" | "read_table" | "inspect_local_file" | "result" | "glob" | "grep" | "write_file" | "edit_file" | "diff" | "stat" | "copy" | "move" | "remove" | "read_files" | "batch")[];
+export declare const OBSERVED_READ_TOOLS: readonly ("replace" | "read_pdf" | "read_docx" | "read_table" | "inspect_local_file" | "glob" | "grep" | "write_file" | "edit_file" | "diff" | "stat" | "copy" | "move" | "remove" | "read_files")[];
+export declare const PTC_RESIDENT_TOOLS: readonly ("replace" | "read_pdf" | "read_docx" | "read_table" | "inspect_local_file" | "result" | "glob" | "grep" | "write_file" | "edit_file" | "diff" | "stat" | "copy" | "move" | "remove" | "read_files" | "batch")[];
