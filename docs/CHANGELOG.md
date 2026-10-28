@@ -7,6 +7,55 @@ this package adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Changed — breaking
+
+- The compatibility fallback component and its switch were removed: the four presets,
+  the discovery entry, activity capture and the TUI link are the whole surface. A saved
+  `compat` section is ignored by the resolver instead of failing startup.
+- The bundle now inserts one Loader row named `dsh-ops` (like a single-plugin bundle):
+  its browser half mounts on that row, and the Plugins page configures it from one page.
+  Per the maintainer's decision that page keeps two bundle switches (hide the official
+  tools, dynamic tool discovery) plus four switches per preset (enable the Bash tool,
+  hide the host PowerShell, hide the official tools, dynamic tool discovery). The last
+  two only apply while the matching bundle switch is on; the mode keeps its saved value
+  and the control is disabled. Worker paths, PTC pools, routing text, capture limits and
+  the credential fence stay YAML-only, so the page cannot grow into a second settings app.
+- Saved patch entries for the old row ids (`dsh-ops-mode-*`, `dsh-ops-discovery`,
+  `dsh-ops-compat`, `dsh-ops-panel`, `dsh-ops-tui`, and the older `shell`/`file`/`ptc`/
+  `hide-official`/`background`) are tolerated but no longer authoritative: their modules
+  log one warning and publish nothing. Move those settings into the single row.
+- The optional client carrier (`dsh-ops/lib/profiles/client`) and the
+  `dsh-ops settings-profile` command are removed: the single row mounts the browser half
+  directly, so the migration is unnecessary and no profile is rewritten.
+- 移除了兼容模式组件及其开关：四个预设、动态工具加载、数据采集与 TUI 联动构成全部配置面；已保存的
+  `compat` 段会被忽略而不是导致启动失败。
+- 现在 bundle 只插入一行 `dsh-ops`：浏览器半侧挂在这一行上，插件页用一个页面配置它。按维护者裁定，
+  页面只保留两个总开关（隐藏原版工具、动态工具加载）加上每个预设的四个开关（开启 Bash 工具、
+  隐藏宿主 PowerShell、隐藏原版工具、动态工具加载）；后两个仅在对应总开关开启时生效，模式保留
+  已保存值、控件置灰。worker 路径、PTC 池、路由补充、采集上限与凭据围栏仍为 YAML-only，
+  配置页不会长成第二个设置中心。
+- 旧行 id 的已保存补丁条目仍被容忍但不再生效：对应模块记录一条警告并不发布任何东西，请把设置
+  迁进这一行。可选承载 bundle 与 `dsh-ops settings-profile` 命令一并删除。
+
+### Changed
+
+- The Plugins page configures all seven rows that have keys (four mode rows, discovery, data
+  capture, TUI link) from one schema-driven form: booleans use the host's native Switch, advanced
+  keys fold by default, and only keys that actually changed are written with the revision the page
+  read. A status section on shell rows and the bundle page reports only the host runtime snapshot and
+  owns the install/remove/upgrade actions, which used to live inside the configuration form.
+- 插件页面用同一套 schema 驱动的表单配置全部七个有键的行（四个模式行、发现、数据采集、TUI 联动）：
+  布尔项使用宿主原生 Switch，高级键默认折叠，只写入真正改动的键并沿用页面读到的 revision。
+  shell 行与组合包页面新增状态区，只报告宿主运行时快照；安装/删除/升级动作从配置表单移入该区。
+
+### Fixed
+
+- The PTC row no longer offers Bash publication and an executor override, which its schema never
+  accepted; the discovery page now exposes the worker override, "fail when the worker is missing"
+  and the credential fence that already existed in its schema.
+- PTC 行的页面不再显示它从未接受的 Bash 发布与执行器路径；发现页面补上了 schema 里已存在的
+  worker 路径覆盖、「worker 缺失即失败」与凭据围栏。
+
 ### Fixed
 
 - Withdraw PTC publication and cancel calls when a session leaves its selected preset; keep other
