@@ -32,7 +32,11 @@ credential fence) stays YAML-only so the page cannot grow into a second settings
   the `dsh-win-pwsh7 link`: while on, the host pwsh tool stays visible for that plugin to
   point at pwsh 7, and every “Hide the host PowerShell” switch locks to off. Until a value is
   saved it follows detection — installing the plugin turns it on by default, and a saved
-  value (off or on) is never overridden by detection.
+  value (off or on) is never overridden by detection. “Unsaved” means untouched: saving
+  another switch never turns that detection into a stored value, while flipping the link
+  itself is always written (on or off). Detection reads the profile that installed this
+  package, so it also answers in the host process, where the launcher sets no
+  `DSH_PROFILE_DIR`.
 
 With "Hide the host PowerShell" off the host shell stays visible; when
 `dsh-win-pwsh7` is installed it replaces PowerShell 5.1 with PowerShell 7 instead,

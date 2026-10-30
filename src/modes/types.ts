@@ -2,8 +2,8 @@
  * The built-in DSH agent presets OPS can enhance.
  *
  * One mode row exists per preset: enabling it makes OPS publish its surface for
- * sessions composed from that preset and, unless Compatibility mode is on, hide
- * the official tools that surface replaces.
+ * sessions composed from that preset and, unless the row's switch turns it off,
+ * hide the official tools that surface replaces.
  */
 export const MODE_IDS = Object.freeze(['minimal', 'standard', 'ptc', 'cordis'] as const)
 /** One enhanced built-in preset. */

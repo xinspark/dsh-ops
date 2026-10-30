@@ -5,8 +5,8 @@
  * publishes only for Agents composed from its preset. The native file surface is
  * registered per Agent, the Windows shell layer and the PTC SDK are gated by the
  * same preset test, and the replacement controller hides only official tools
- * whose OPS counterpart is visible. Compatibility mode is a runtime switch that
- * lifts those hides without unloading any row.
+ * whose OPS counterpart is visible. The row's own switches lift those hides
+ * without unloading any row.
  */
 import type { Context } from '../adapter/dsh/types.js'
 import type { Agent } from '../adapter/dsh/types.js'
